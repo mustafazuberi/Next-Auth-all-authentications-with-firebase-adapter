@@ -1,16 +1,19 @@
 import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import type { Adapter } from "next-auth/adapters";
-import { db } from "@/configs/config.firebase";
-import * as firestoreFunctions from "firebase/firestore";
+import { initFirestore } from "@auth/firebase-adapter";
+import { cert } from "firebase-admin/app";
 
-const firestoreAdapterConfig = {
-  db: db as any,
-  ...firestoreFunctions,
-};
+export const firestore = initFirestore({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
+  }),
+});
 
 export const authOptions = {
-  adapter: FirestoreAdapter(firestoreAdapterConfig as any) as Adapter,
+  adapter: FirestoreAdapter(firestore) as Adapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -18,5 +21,4 @@ export const authOptions = {
     }),
   ],
   secret: process.env.NEXT_AUTH_SECRET,
-  debug: true,
 };
